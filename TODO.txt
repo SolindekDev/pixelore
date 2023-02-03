@@ -1,0 +1,16 @@
+Pixelore - will be an simple pixel art app easy to use and light
+
+Programming Language - C
+Graphics Engine - SDL2
+Images formats read & write - stbimage.h
+
+TODO:
+    - [x] Setup build system easy for now
+    - [x] Open an simple window with GLUT
+    - [x] Start getting on the core things like opening an image file and show it in the app
+    - [x] Write to the image buffer
+    - [ ] Sliders for color picker
+    - [ ] Save the image buffer from the app to file system
+    - [ ] Settings
+    - [ ] Config file
+    - [ ] Multiplatform
