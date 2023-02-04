@@ -25,7 +25,7 @@
 #include <pixelore_draw.h>
 
 struct button_t;
-typedef int (*BTN_CALLBACK)(window_t* win, struct button_t btn, vec2_t vec);
+typedef int (*BTN_CALLBACK)(window_t* win, struct button_t btn, vec2_t vec, bool mouse_pressed);
 typedef void (*BTN_DRAW)(window_t* win, struct button_t btn);
 
 typedef struct button_t {

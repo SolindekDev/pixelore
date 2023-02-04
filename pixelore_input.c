@@ -19,6 +19,7 @@
 
 #include <pixelore_input.h>
 #include <pixelore_types.h>
+#include <pixelore_button.h>
 #include <pixelore_config.h>
 #include <pixelore_draw.h>
 #include <pixelore_app.h>
@@ -128,6 +129,9 @@ void create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, 
     inputs_len++;
 
     strcpy(inputs[inputs_len - 1].value, start_value);
+
+#ifdef __DEBUG
     DEBUG_NN("Successfully registered input with id [");
     printf("%d]\n", inputs[inputs_len - 1].id);
+#endif
 }

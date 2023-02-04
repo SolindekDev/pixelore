@@ -82,11 +82,12 @@ static color_t toolkit_colors[] = {
     { 000, 000, 000, 255, "Black"  },  /* 11. Black */
 };
 
-static str tools[4] = {
+static str tools[5] = {
     [0] = "Pencil",
     [1] = "Eraser",
-    [2] = "Color picker",
-    [3] = "Bucket",
+    [2] = "Line",
+    [3] = "Color picker",
+    [4] = "Bucket",
 };
 
 #endif

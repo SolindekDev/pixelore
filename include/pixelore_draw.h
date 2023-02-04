@@ -24,8 +24,15 @@
 #include <pixelore_window.h>
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define PIXEL_MATCH(pixel, pixel2) ((pixel.r == pixel2.r) && (pixel.g == pixel2.g) &&  (pixel.b == pixel2.b))
+
+#define PRINT_VEC(vec)     { printf("vec { x: %d, y: %d }\n", vec.x, vec.y); }
+#define IS_VEC_EMPTY(vec)  ((vec.x == -1) && (vec.y == -1))
+#define SET_VEC_EMPTY(vec) { vec.x = -1; vec.y = -1; }
+
+#define ABS(n) (((n > 0) ? n : (n * (-1))))
 
 typedef struct color_t { 
     u8 r, g, b, a; 

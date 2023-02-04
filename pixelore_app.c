@@ -28,6 +28,11 @@
 #include <pixelore_draw.h>
 #include <pixelore_scroll.h>
 
+/* STD Libraries */
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
 /* SDL2 Library */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -63,8 +68,11 @@ __GLOBAL__ bool   project_saved = true;
 __GLOBAL__ str    project_name = "default_project";
 __GLOBAL__ vec2_t project_size = { 32, 32 };
 
+__GLOBAL__ vec2_t start_line = { -1, -1 };
+__GLOBAL__ vec2_t end_line = { -1, -1 };
+
 /* Function for saving project */
-int save_project_callback(window_t* win, button_t btn, vec2_t _unused)
+int save_project_callback(window_t* win, button_t btn, vec2_t _unused, bool __unused)
 {
     /* Create image filename so it looks cool lol */
     str image_name_buf = malloc(512 * sizeof(char));
@@ -82,7 +90,7 @@ int save_project_callback(window_t* win, button_t btn, vec2_t _unused)
     {
 #ifdef __DEBUG
         DEBUG_NN("Something gone wrong, stbi_write_png returned: ");
-        printf("%s\n", status);
+        printf("%d\n", status);
 #endif
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Couldn't create image file", 
                                  "Something gone wrong while calling stbi_write_png", win->sdl_window);
@@ -111,7 +119,7 @@ void update_color_picker_inputs(color_t color)
 }
 
 /* Function for handling color buttons */
-i32 color_callback_button(window_t* win, button_t btn, vec2_t _unused)
+i32 color_callback_button(window_t* win, button_t btn, vec2_t _unused, bool __unused)
 {
     /* Quick little debug */
 #ifdef __DEBUG
@@ -128,7 +136,7 @@ i32 color_callback_button(window_t* win, button_t btn, vec2_t _unused)
 }
 
 /* Function for handling tool selection buttons */
-i32 tool_select_callback(window_t* win, button_t btn, vec2_t _unused)
+i32 tool_select_callback(window_t* win, button_t btn, vec2_t _unused, bool __unused)
 {
     /* Quick little debug */
 #ifdef __DEBUG
@@ -281,14 +289,52 @@ void bucket(vec2_t mouse, color_t bucket_color)
         else
             break;
     }
+}
 
-   
-    
+void draw_line_in_bitmap(vec2_t start, vec2_t end, color_t color)
+{
+    int dx = end.x - start.x;
+    int dy = end.y - start.y;
+    int d = 2 * dy - dx;
+    int y = start.y;
+
+    for (int x = start.x; x <= end.x; x++) {
+        put_pixel_into_surface((vec2_t){ x, y }, color);
+        if (d > 0) {
+            y = y + 1;
+            d = d - 2 * dx;
+        }
+        d = d + 2 * dy;
+    }
+}
+
+/* Implementation of line tool */
+void tool_line(window_t* win, vec2_t mouse, bool button_press)
+{
+    if (button_press == 1)
+    {
+        if (IS_VEC_EMPTY(start_line))
+        {
+            start_line = mouse;
+            return;
+        }
+
+        end_line = mouse;
+    }
+    else
+    {
+        PRINT_VEC(start_line);
+        PRINT_VEC(end_line);
+
+        draw_line_in_bitmap(start_line, end_line, custom_color);
+        SET_VEC_EMPTY(start_line);
+        SET_VEC_EMPTY(end_line);
+    }
 }
 
 /* This function is called when user is clicking on the 
  * bitmap */
-i32 bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse)
+i32 bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse, bool button_press)
 {
     /* Calculate the bitmap position from the mouse position lol
      * Just substract mouse.x with btn.x and in the other way then
@@ -300,14 +346,15 @@ i32 bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse)
      * and call the main function of it */
     switch (selected_tool)
     {
-        case 0:  write_pixel_into_surface(mouse); break;
-        case 1:  eraser(mouse);                   break;
-        case 2:  color_picker(mouse);             break;
-        case 3:  bucket(mouse, custom_color);     break;   
+        case 0:  write_pixel_into_surface(mouse);       break;
+        case 1:  eraser(mouse);                         break;
+        case 2:  tool_line(win, mouse, button_press);   break;
+        case 3:  color_picker(mouse);                   break;
+        case 4:  bucket(mouse, custom_color);           break;   
 #ifdef __DEBUG
-        default: DEBUG("Unimplemented tool");     break;
+        default: DEBUG("Unimplemented tool");           break;
 #else  
-        default:                                  break;
+        default:                                        break;
 #endif
     }
 
@@ -365,6 +412,7 @@ void create_button_tools(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolki
 {
     create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 150, 90,  35, "Pencil",       tool_select_callback);
     create_button_with_text(win, toolkit_x + toolkit_padding + 100, toolkit_y + toolkit_padding + 150, 90,  35, "Eraser",       tool_select_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 200, toolkit_y + toolkit_padding + 150, 70,  35, "Line",         tool_select_callback);
     create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 195, 170, 35, "Color Picker", tool_select_callback);
     create_button_with_text(win, toolkit_x + toolkit_padding + 180, toolkit_y + toolkit_padding + 195, 100, 35, "Bucket",       tool_select_callback);
 }
@@ -488,6 +536,13 @@ void app_draw_main_container(window_t* win)
     SDL_RenderCopy(win->sdl_renderer, texture, NULL, &rect);
     SDL_DestroyTexture(texture);
     resize_button(win, 0, rect.x, rect.y, rect.w, rect.h);
+
+    if (!(start_line.x == -1 || start_line.y == -1))
+    {
+        SDL_SetRenderDrawColor(win->sdl_renderer, custom_color.r, custom_color.g, custom_color.b, custom_color.a);
+        SDL_RenderDrawLine(win->sdl_renderer, rect.x + (start_line.x * get_scroll()), rect.y + (start_line.y * get_scroll()), 
+                        rect.x + (end_line.x * get_scroll()), rect.y + (end_line.y * get_scroll()));
+    }
 }
 
 /* Function that is called in for loop */

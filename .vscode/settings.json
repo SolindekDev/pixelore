@@ -5,6 +5,12 @@
         "pixelore_draw.h": "c",
         "stb_image_write.h": "c",
         "pixelore_scroll.h": "c",
-        "stb_image.h": "c"
+        "stb_image.h": "c",
+        "pixelore_config.h": "c",
+        "pixelore_button.h": "c",
+        "pixelore_types.h": "c",
+        "typeinfo": "c",
+        "pixelore_input.h": "c",
+        "stdarg.h": "c"
     }
 }

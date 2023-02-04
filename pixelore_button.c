@@ -39,8 +39,10 @@ void create_button(window_t* win, i16 x, i16 y, i16 w, i16 h, BTN_CALLBACK btn_c
     buttons[buttons_len] = button;
     buttons_len++;
 
+#ifdef __DEBUG
     DEBUG_NN("Successfully registered button with id [");
     printf("%d]\n", buttons[buttons_len - 1].id);
+#endif
 }
 
 void resize_button(window_t* win, i32 id, i16 x, i16 y, i16 w, i16 h)
@@ -59,8 +61,10 @@ void create_button_with_text(window_t* win, i16 x, i16 y, i16 w, i16 h, str valu
     buttons[buttons_len] = button;
     buttons_len++;
 
+#ifdef __DEBUG
     DEBUG_NN("Successfully registered button with id [");
     printf("%d]\n", buttons[buttons_len - 1].id);
+#endif
 }
 
 bool check_box_collision(i16 x1, i16 y1, i16 w1, i16 h1, i16 x2, i16 y2, i16 w2, i16 h2) {
@@ -104,10 +108,7 @@ void handle_mouse_button_event(SDL_Event event)
     if (event.button.type == SDL_MOUSEBUTTONDOWN) 
         mouse_click = true;
     else
-    {
         mouse_click = false;
-        return;
-    }
 
     for (i32 i = 0; i < buttons_len; i++)
     {
@@ -120,7 +121,7 @@ void handle_mouse_button_event(SDL_Event event)
                 for (i32 i = 0; i < buttons_len; i++)
                     if (buttons[i].btn_draw != NULL)
                         buttons[i].is_active = false;
-                buttons[i].is_active = current_button.btn_callback(window, current_button, mouse_vec);
+                buttons[i].is_active = current_button.btn_callback(window, current_button, mouse_vec, mouse_click);
             }
             break;
         }
@@ -139,7 +140,7 @@ void handle_mouse_motion_event(SDL_Event event)
             if (current_button.btn_callback != NULL)
             {
                 vec2_t mouse_vec = { event.button.x, event.button.y };
-                current_button.btn_callback(window, current_button, mouse_vec);
+                current_button.btn_callback(window, current_button, mouse_vec, mouse_click);
             }
             break;
         }
