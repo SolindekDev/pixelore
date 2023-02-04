@@ -17,6 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+/* All pixelore includes */
 #include <pixelore_app.h>
 #include <pixelore_main.h>
 #include <pixelore_input.h>
@@ -27,9 +28,14 @@
 #include <pixelore_draw.h>
 #include <pixelore_scroll.h>
 
+/* SDL2 Library */
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+
+/* STB Library */
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb/stb_image_write.h>
 
 /* Some important global variables */
 
@@ -41,13 +47,52 @@ __GLOBAL__ color_t custom_color = { 255, 255, 255 };
 __GLOBAL__ i32          bitmap_w = 0;
 __GLOBAL__ i32          bitmap_h = 0;
 __GLOBAL__ u8           bitmap_depth = 32;
-__GLOBAL__ SDL_Surface* bitmap = NULL;
+
+/* Why there is two bitmaps? Front bitmap 
+ * is bitmap where we are writting colors
+ * BGR but in the back we write as RGB because
+ * idk why but surface have BGR format instead
+ * of RGB, back bitmap is used only for
+ * saving is as file */
+__GLOBAL__ SDL_Surface* front_bitmap = NULL;
+__GLOBAL__ SDL_Surface* back_bitmap  = NULL;
 
 /* Project info */
 __GLOBAL__ bool   is_project_opened = false;
 __GLOBAL__ bool   project_saved = true;
-__GLOBAL__ str    project_name = "defualt_project";
+__GLOBAL__ str    project_name = "default_project";
 __GLOBAL__ vec2_t project_size = { 32, 32 };
+
+/* Function for saving project */
+int save_project_callback(window_t* win, button_t btn, vec2_t _unused)
+{
+    /* Create image filename so it looks cool lol */
+    str image_name_buf = malloc(512 * sizeof(char));
+    snprintf(image_name_buf, 512, "./%s.png", project_name);
+
+    /* Quick little debug thing ;) */
+#ifdef __DEBUG
+    DEBUG_NN("Creating file: ");
+    printf("%s\n", image_name_buf);
+#endif
+
+    /* Write png to file by using stb_image_write library that i awesome! */
+    i32 status = stbi_write_png(image_name_buf, bitmap_w, bitmap_h, 4, (const void*)back_bitmap->pixels, back_bitmap->pitch);
+    if (status == 0)
+    {
+#ifdef __DEBUG
+        DEBUG_NN("Something gone wrong, stbi_write_png returned: ");
+        printf("%s\n", status);
+#endif
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Couldn't create image file", 
+                                 "Something gone wrong while calling stbi_write_png", win->sdl_window);
+    }
+
+    /* Free the allocated memory for image_name_buf */
+    free(image_name_buf);
+
+    return 0;
+}
 
 /* Function for easier setting the custom color value*/
 void set_custom_color_value(color_t color)
@@ -116,15 +161,29 @@ void eraser(vec2_t bitmap_pos)
  * position and color */
 void put_pixel_into_surface(vec2_t bitmap_pos, color_t color)
 {
-    /* Create u8 pointer of bitmap pixels 
-     * and calculate offset */
-    u8* pixel = (u8*)bitmap->pixels;
-    i32 offset = (bitmap_pos.y * bitmap->pitch) + (bitmap_pos.x * sizeof(u8) * 4);
+    /* Write to font bitmap */
 
-    /* Set pixels into the pointer */
-    pixel[offset + 0] = color.b;
-    pixel[offset + 1] = color.g;
-    pixel[offset + 2] = color.r;
+    /* Create u8 pointer of front bitmap pixels and calculate offset */
+    u8* front_pixels = (u8*)front_bitmap->pixels;
+    i32 front_offset = (bitmap_pos.y * front_bitmap->pitch) + (bitmap_pos.x * sizeof(u8) * 4);
+
+    /* Set front pixels into the pointer */
+    front_pixels[front_offset + 0] = color.b;
+    front_pixels[front_offset + 1] = color.g;
+    front_pixels[front_offset + 2] = color.r;
+    front_pixels[front_offset + 3] = 255;
+
+    /* Write to back bitmap */
+
+    /* Create u8 pointer of back bitmap pixels and calculate offset */
+    u8* back_pixels = (u8*)back_bitmap->pixels;
+    i32 back_offset = (bitmap_pos.y * back_bitmap->pitch) + (bitmap_pos.x * sizeof(u8) * 4);
+
+    /* Set back pixels into the pointer */
+    back_pixels[back_offset + 0] = color.r;
+    back_pixels[back_offset + 1] = color.g;
+    back_pixels[back_offset + 2] = color.b;
+    back_pixels[back_offset + 3] = 255;
 }
 
 /* Simple function wrapper for put_pixel_into_surface
@@ -141,8 +200,8 @@ color_t get_pixel_bitmap(vec2_t bitmap_pos)
 {    
     /* Create u8 pointer of bitmap pixels 
      * and calculate offset */
-    u8* pixel = (u8*)bitmap->pixels;
-    i32 offset = (bitmap_pos.y * bitmap->pitch) + (bitmap_pos.x * sizeof(u8) * 4);
+    u8* pixel = (u8*)front_bitmap->pixels;
+    i32 offset = (bitmap_pos.y * front_bitmap->pitch) + (bitmap_pos.x * sizeof(u8) * 4);
 
     /* Pack this pixel into color_t */
     return (color_t){ pixel[offset + 2], pixel[offset + 1], pixel[offset + 0] };
@@ -279,7 +338,8 @@ void set_default_bitmap_project_size(i32 w, i32 h)
 /* Function for setuping bitmap */
 void setup_bitmap(window_t* win, i32 main_container_w, i32 main_container_h)
 {
-    bitmap = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
+    front_bitmap = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
+    back_bitmap  = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
     create_button(win, main_container_w / 2 - bitmap_w / 2, main_container_h / 2 - bitmap_h / 2,
                   bitmap_w, bitmap_h, bitmap_write_pixel_callback);
 }
@@ -326,7 +386,7 @@ void create_color_input_pickers(window_t* win, i32 toolkit_x, i32 toolkit_y, i32
 /* Function that will create some other essential buttons*/
 void create_other_buttons(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
 {
-    create_button_with_text(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35, (window_get_width(win) / 4) - toolkit_padding * 4, 35, "Save", NULL);
+    create_button_with_text(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35, (window_get_width(win) / 4) - toolkit_padding * 4, 35, "Save", save_project_callback);
 }
 
 /* Function that is called on start */
@@ -418,7 +478,7 @@ void app_draw_main_container(window_t* win)
 
     /* Setup texture and rect and then render it and destroy the texture
      * also resize the bitmap*/
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(win->sdl_renderer, bitmap);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(win->sdl_renderer, front_bitmap);
     SDL_Rect rect = { };
     rect.w = bitmap_w * get_scroll();
     rect.h = bitmap_h * get_scroll();
