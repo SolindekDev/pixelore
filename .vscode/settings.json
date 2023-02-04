@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "pixelore_app.h": "c",
+        "pixelore_window.h": "c",
+        "pixelore_draw.h": "c"
+    }
+}

@@ -21,14 +21,31 @@
 #define PIXELORE_APP
 
 #include <pixelore_window.h>
+#include <pixelore_draw.h>
 
 #include <stdlib.h>
 
 #define __GLOBAL__ static
 #define __EXTERN__ extern
+
 #define EXIT(status) exit(status);
 
+#define SETUP_TOOLKIT_VARIABLES()                           \
+    i32 toolkit_padding = 10;                               \
+    i32 toolkit_x = 0;                                      \
+    i32 toolkit_y = 0 + toolkit_padding;                    \
+    if (APP_TOOLKIT_ALIGNMENT != TOOLKIT_ALIGNEMT_LEFT)     \
+        toolkit_x = main_container_w + toolkit_padding;     \
+
+#define SETUP_MAIN_CONTAINER_VARIABLES()                    \
+    i32 main_container_w = window_get_width(win) * 0.75;    \
+    i32 main_container_h = window_get_height(win);          \
+
 void handle_mouse_whell(SDL_Event event);
+
+void put_pixel_into_surface(vec2_t bitmap_pos, color_t color);
+
+void write_pixel_into_surface(vec2_t bitmap_pos);
 
 void app_start(window_t* win);
 

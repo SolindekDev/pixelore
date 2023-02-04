@@ -29,6 +29,7 @@
 
 __GLOBAL__ i32 project_scroll = 1;
 
+/* Function for handling mouse whell event */
 void handle_mouse_whell(SDL_Event event)
 {
     project_scroll += event.wheel.y;
@@ -36,10 +37,11 @@ void handle_mouse_whell(SDL_Event event)
     if (project_scroll == 0)
         project_scroll = 1;
 
-    if (project_scroll == 20)
-        project_scroll = 19;
+    if (project_scroll == 25)
+        project_scroll = 24;
 }
 
+/* Function that return project_scroll variable */
 i32 get_scroll()
 {
     return project_scroll;
