@@ -47,6 +47,8 @@ void put_pixel_into_surface(vec2_t bitmap_pos, color_t color);
 
 void write_pixel_into_surface(vec2_t bitmap_pos);
 
+void bucket(vec2_t mouse, color_t bucket_color);
+
 void app_start(window_t* win);
 
 void app_loop(window_t* win);

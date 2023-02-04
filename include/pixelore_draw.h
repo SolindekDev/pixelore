@@ -25,7 +25,7 @@
 
 #include <stdarg.h>
 
-#define IMAGE SDL_Texture
+#define PIXEL_MATCH(pixel, pixel2) ((pixel.r == pixel2.r) && (pixel.g == pixel2.g) &&  (pixel.b == pixel2.b))
 
 typedef struct color_t { 
     u8 r, g, b, a; 

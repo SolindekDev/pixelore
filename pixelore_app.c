@@ -66,7 +66,7 @@ void update_color_picker_inputs(color_t color)
 }
 
 /* Function for handling color buttons */
-int color_callback_button(window_t* win, button_t btn, vec2_t _unused)
+i32 color_callback_button(window_t* win, button_t btn, vec2_t _unused)
 {
     /* Quick little debug */
 #ifdef __DEBUG
@@ -83,7 +83,7 @@ int color_callback_button(window_t* win, button_t btn, vec2_t _unused)
 }
 
 /* Function for handling tool selection buttons */
-int tool_select_callback(window_t* win, button_t btn, vec2_t _unused)
+i32 tool_select_callback(window_t* win, button_t btn, vec2_t _unused)
 {
     /* Quick little debug */
 #ifdef __DEBUG
@@ -166,15 +166,70 @@ void color_picker(vec2_t mouse)
 }    
 
 /* TODO: create button implementation */
-void bucket(vec2_t mouse)
+void bucket(vec2_t mouse, color_t bucket_color)
 {
     /* Loop over all the pixels in all directions and if pixels does not 
      * equals the started pixel end looping in this direction */
+
+    color_t start_pixel = get_pixel_bitmap(mouse);
+
+    /* loop trough pixels from the mouse.x to bitmap_w */
+    for (i32 x1 = mouse.x; x1 < bitmap_w; x1++)
+    {
+        if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, mouse.y }), start_pixel)) == true)
+        {
+            for (i32 y1 = mouse.y; y1 < bitmap_h; y1++)
+            {
+                if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y1 }), start_pixel)) == true)
+                    put_pixel_into_surface((vec2_t){ x1, y1 }, bucket_color);
+                else
+                    break;
+            }
+
+            for (i32 y2 = mouse.y - 1; y2 != -1; y2--)
+            {
+                if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y2 }), start_pixel)) == true)
+                    put_pixel_into_surface((vec2_t){ x1, y2 }, bucket_color);
+                else
+                    break;
+            }
+        }
+        else
+            break;
+    }
+
+    // /* loop trough pixels from the mouse.x to x cord 0 */
+    for (i32 x1 = mouse.x; x1 != -1; x1--)
+    {
+        if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1 == mouse.x ? x1 - 1 : x1, mouse.y }), start_pixel)) == true)
+        {
+            for (i32 y1 = mouse.y; y1 < bitmap_h; y1++)
+            {
+                if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y1 }), start_pixel)) == true)
+                    put_pixel_into_surface((vec2_t){ x1, y1 }, bucket_color);
+                else
+                    break;
+            }
+
+            for (i32 y2 = mouse.y - 1; y2 != -1; y2--)
+            {
+                if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y2 }), start_pixel)) == true)
+                    put_pixel_into_surface((vec2_t){ x1, y2 }, bucket_color);
+                else
+                    break;
+            }
+        }
+        else
+            break;
+    }
+
+   
+    
 }
 
 /* This function is called when user is clicking on the 
  * bitmap */
-int bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse)
+i32 bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse)
 {
     /* Calculate the bitmap position from the mouse position lol
      * Just substract mouse.x with btn.x and in the other way then
@@ -189,7 +244,7 @@ int bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse)
         case 0:  write_pixel_into_surface(mouse); break;
         case 1:  eraser(mouse);                   break;
         case 2:  color_picker(mouse);             break;
-        case 3:  bucket(mouse);                   break;   
+        case 3:  bucket(mouse, custom_color);     break;   
 #ifdef __DEBUG
         default: DEBUG("Unimplemented tool");     break;
 #else  
