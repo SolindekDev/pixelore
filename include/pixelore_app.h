@@ -22,6 +22,7 @@
 
 #include <pixelore_window.h>
 #include <pixelore_draw.h>
+#include <pixelore_types.h>
 
 #include <stdlib.h>
 
@@ -29,6 +30,8 @@
 #define __EXTERN__ extern
 
 #define EXIT(status) exit(status);
+
+#define ITER(len) for (i32 i = 0; i < len; i++)
 
 #define SETUP_TOOLKIT_VARIABLES()                           \
     i32 toolkit_padding = 10;                               \

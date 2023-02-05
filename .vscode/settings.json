@@ -11,6 +11,8 @@
         "pixelore_types.h": "c",
         "typeinfo": "c",
         "pixelore_input.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "pixelore_main.h": "c",
+        "pixelore_tools.h": "c"
     }
 }

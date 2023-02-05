@@ -122,7 +122,7 @@ void input_draw_event(window_t* win)
 void create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, i32 max_len, str start_value, INPUT_CALLBACK input_callback)
 {
     window = win;
-    int inputs_len_ = inputs_len;
+    i32 inputs_len_ = inputs_len;
     input_t input = { 1, x, y, w, h, inputs_len_, true, false, NULL, input_callback, input_draw_default, max_len };
     input.value = malloc(sizeof(char) * max_len);
     inputs[inputs_len] = input;

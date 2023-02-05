@@ -27,6 +27,7 @@
 #include <pixelore_button.h>
 #include <pixelore_draw.h>
 #include <pixelore_scroll.h>
+#include <pixelore_tools.h>
 
 /* STD Libraries */
 #include <stdio.h>
@@ -44,8 +45,7 @@
 
 /* Some important global variables */
 
-/* Tools & colors */
-__GLOBAL__ i16 selected_tool = 0;  
+/* Colors */
 __GLOBAL__ color_t custom_color = { 255, 255, 255 };
 
 /* Bitmap info */
@@ -72,7 +72,7 @@ __GLOBAL__ vec2_t start_line = { -1, -1 };
 __GLOBAL__ vec2_t end_line = { -1, -1 };
 
 /* Function for saving project */
-int save_project_callback(window_t* win, button_t btn, vec2_t _unused, bool __unused)
+i32 save_project_callback(window_t* win, button_t btn, vec2_t _unused, bool __unused)
 {
     /* Create image filename so it looks cool lol */
     str image_name_buf = malloc(512 * sizeof(char));
@@ -135,23 +135,8 @@ i32 color_callback_button(window_t* win, button_t btn, vec2_t _unused, bool __un
     return 0;
 }
 
-/* Function for handling tool selection buttons */
-i32 tool_select_callback(window_t* win, button_t btn, vec2_t _unused, bool __unused)
-{
-    /* Quick little debug */
-#ifdef __DEBUG
-    DEBUG_NN("Selected tool: ");
-    printf("%s\n", tools[btn.id - TOOLKIT_COLORS_LENGTH - 1]);
-#endif
-
-    /* Set selecteed tool to button id - TOOLKIT_COLORS_LENGTH - 1
-     * It's not that complicated math lmao */
-    selected_tool = btn.id - TOOLKIT_COLORS_LENGTH - 1;
-    return 1;
-}
-
 /* Function for eraser logic */
-void eraser(vec2_t bitmap_pos)
+void tool_eraser(window_t* _win, vec2_t mouse_pos, bool _mouse_pressed, tool_t* _tool_structure)
 {
     /* Copy the custom_color variable and set the 
      * real one to zero's */
@@ -161,7 +146,7 @@ void eraser(vec2_t bitmap_pos)
     custom_color.b = 0;
 
     /* Write black pixel into bitmap surface */
-    write_pixel_into_surface(bitmap_pos);
+    write_pixel_into_surface(mouse_pos);
     custom_color = color_copy;
 }
 
@@ -216,10 +201,10 @@ color_t get_pixel_bitmap(vec2_t bitmap_pos)
 }
 
 /* Color picker implementation function */
-void color_picker(vec2_t mouse)
+void tool_color_picker(window_t* _win, vec2_t mouse_pos, bool _mouse_pressed, tool_t* _tool_structure)
 {
     /* Get the pixel as an color */
-    color_t color_pixel = get_pixel_bitmap(mouse);
+    color_t color_pixel = get_pixel_bitmap(mouse_pos);
 
     /* Update color values and inputs */
     set_custom_color_value(color_pixel);
@@ -233,7 +218,7 @@ void color_picker(vec2_t mouse)
 }    
 
 /* TODO: create button implementation */
-void bucket(vec2_t mouse, color_t bucket_color)
+void tool_bucket(window_t* _win, vec2_t mouse, bool _mouse_pressed, tool_t* _tool_structure)
 {
     /* Loop over all the pixels in all directions and if pixels does not 
      * equals the started pixel end looping in this direction */
@@ -248,7 +233,7 @@ void bucket(vec2_t mouse, color_t bucket_color)
             for (i32 y1 = mouse.y; y1 < bitmap_h; y1++)
             {
                 if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y1 }), start_pixel)) == true)
-                    put_pixel_into_surface((vec2_t){ x1, y1 }, bucket_color);
+                    put_pixel_into_surface((vec2_t){ x1, y1 }, custom_color);
                 else
                     break;
             }
@@ -256,7 +241,7 @@ void bucket(vec2_t mouse, color_t bucket_color)
             for (i32 y2 = mouse.y - 1; y2 != -1; y2--)
             {
                 if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y2 }), start_pixel)) == true)
-                    put_pixel_into_surface((vec2_t){ x1, y2 }, bucket_color);
+                    put_pixel_into_surface((vec2_t){ x1, y2 }, custom_color);
                 else
                     break;
             }
@@ -273,7 +258,7 @@ void bucket(vec2_t mouse, color_t bucket_color)
             for (i32 y1 = mouse.y; y1 < bitmap_h; y1++)
             {
                 if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y1 }), start_pixel)) == true)
-                    put_pixel_into_surface((vec2_t){ x1, y1 }, bucket_color);
+                    put_pixel_into_surface((vec2_t){ x1, y1 }, custom_color);
                 else
                     break;
             }
@@ -281,7 +266,7 @@ void bucket(vec2_t mouse, color_t bucket_color)
             for (i32 y2 = mouse.y - 1; y2 != -1; y2--)
             {
                 if ((PIXEL_MATCH(get_pixel_bitmap((vec2_t){ x1, y2 }), start_pixel)) == true)
-                    put_pixel_into_surface((vec2_t){ x1, y2 }, bucket_color);
+                    put_pixel_into_surface((vec2_t){ x1, y2 }, custom_color);
                 else
                     break;
             }
@@ -293,12 +278,12 @@ void bucket(vec2_t mouse, color_t bucket_color)
 
 void draw_line_in_bitmap(vec2_t start, vec2_t end, color_t color)
 {
-    int dx = end.x - start.x;
-    int dy = end.y - start.y;
-    int d = 2 * dy - dx;
-    int y = start.y;
+    i32 dx = end.x - start.x;
+    i32 dy = end.y - start.y;
+    i32 d = 2 * dy - dx;
+    i32 y = start.y;
 
-    for (int x = start.x; x <= end.x; x++) {
+    for (i32 x = start.x; x <= end.x; x++) {
         put_pixel_into_surface((vec2_t){ x, y }, color);
         if (d > 0) {
             y = y + 1;
@@ -309,17 +294,17 @@ void draw_line_in_bitmap(vec2_t start, vec2_t end, color_t color)
 }
 
 /* Implementation of line tool */
-void tool_line(window_t* win, vec2_t mouse, bool button_press)
+void tool_line(window_t* _win, vec2_t mouse_pos, bool mouse_pressed, tool_t* _tool_structure)
 {
-    if (button_press == 1)
+    if (mouse_pressed == 1)
     {
         if (IS_VEC_EMPTY(start_line))
         {
-            start_line = mouse;
+            start_line = mouse_pos;
             return;
         }
 
-        end_line = mouse;
+        end_line = mouse_pos;
     }
     else
     {
@@ -332,33 +317,9 @@ void tool_line(window_t* win, vec2_t mouse, bool button_press)
     }
 }
 
-/* This function is called when user is clicking on the 
- * bitmap */
-i32 bitmap_write_pixel_callback(window_t* win, button_t btn, vec2_t mouse, bool button_press)
+void tool_pencil(window_t* win, vec2_t mouse_pos, bool mouse_pressed, tool_t* tool_structure)
 {
-    /* Calculate the bitmap position from the mouse position lol
-     * Just substract mouse.x with btn.x and in the other way then
-     * get the scroll number and divide it by mouse.x and mouse.y*/
-    mouse.x = ((mouse.x - btn.x) / get_scroll());
-    mouse.y = ((mouse.y - btn.y) / get_scroll());
-
-    /* Recognize which tool is actually selected
-     * and call the main function of it */
-    switch (selected_tool)
-    {
-        case 0:  write_pixel_into_surface(mouse);       break;
-        case 1:  eraser(mouse);                         break;
-        case 2:  tool_line(win, mouse, button_press);   break;
-        case 3:  color_picker(mouse);                   break;
-        case 4:  bucket(mouse, custom_color);           break;   
-#ifdef __DEBUG
-        default: DEBUG("Unimplemented tool");           break;
-#else  
-        default:                                        break;
-#endif
-    }
-
-    return 0;
+    write_pixel_into_surface(mouse_pos);
 }
 
 /* Function that is called always on color picker input
@@ -388,7 +349,7 @@ void setup_bitmap(window_t* win, i32 main_container_w, i32 main_container_h)
     front_bitmap = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
     back_bitmap  = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
     create_button(win, main_container_w / 2 - bitmap_w / 2, main_container_h / 2 - bitmap_h / 2,
-                  bitmap_w, bitmap_h, bitmap_write_pixel_callback);
+                  bitmap_w, bitmap_h, bitmap_tool_callback);
 }
 
 /* Function for creating toolkit colors*/
@@ -410,11 +371,16 @@ void create_toolkit_colors(window_t* win, i32 toolkit_x, i32 toolkit_y)
 /* Function for creating tool buttons*/
 void create_button_tools(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
 {
-    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 150, 90,  35, "Pencil",       tool_select_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding + 100, toolkit_y + toolkit_padding + 150, 90,  35, "Eraser",       tool_select_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding + 200, toolkit_y + toolkit_padding + 150, 70,  35, "Line",         tool_select_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 195, 170, 35, "Color Picker", tool_select_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding + 180, toolkit_y + toolkit_padding + 195, 100, 35, "Bucket",       tool_select_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 150, 90,  35, "Pencil",       tool_selection_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 100, toolkit_y + toolkit_padding + 150, 90,  35, "Eraser",       tool_selection_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 200, toolkit_y + toolkit_padding + 150, 70,  35, "Line",         tool_selection_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 195, 170, 35, "Color Picker", tool_selection_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 180, toolkit_y + toolkit_padding + 195, 100, 35, "Bucket",       tool_selection_callback);
+    create_tool(win, "Pencil",       tool_pencil);
+    create_tool(win, "Eraser",       tool_eraser);
+    create_tool(win, "Line",         tool_line);
+    create_tool(win, "Color Picker", tool_color_picker);
+    create_tool(win, "Bucket",       tool_bucket);
 }
 
 /* Function for creating input pickers */

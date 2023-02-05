@@ -34,7 +34,7 @@ __GLOBAL__ bool mouse_click = false;
 void create_button(window_t* win, i16 x, i16 y, i16 w, i16 h, BTN_CALLBACK btn_callback)
 {
     window = win;
-    int buttons_len_ = buttons_len;
+    i32 buttons_len_ = buttons_len;
     button_t button = { 1, x, y, w, h, buttons_len_, false, false, NULL, btn_callback, NULL };
     buttons[buttons_len] = button;
     buttons_len++;
@@ -56,7 +56,7 @@ void resize_button(window_t* win, i32 id, i16 x, i16 y, i16 w, i16 h)
 void create_button_with_text(window_t* win, i16 x, i16 y, i16 w, i16 h, str value, BTN_CALLBACK btn_callback)
 {
     window = win;
-    int buttons_len_ = buttons_len;
+    i32 buttons_len_ = buttons_len;
     button_t button = { 1, x, y, w, h, buttons_len_, true, false, value, btn_callback, button_draw_handle };
     buttons[buttons_len] = button;
     buttons_len++;
