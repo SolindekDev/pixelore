@@ -10,7 +10,9 @@ TODO:
     - [x] Start getting on the core things like opening an image file and show it in the app
     - [x] Write to the image buffer
     - [ ] Sliders for color picker
-    - [ ] Save the image buffer from the app to file system
+    - [x] Save the image buffer from the app to file system
+    - [ ] Set image name
+    - [ ] Change image format
     - [ ] Settings
     - [ ] Config file
     - [ ] Multiplatform
