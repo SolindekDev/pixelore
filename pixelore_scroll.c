@@ -37,8 +37,8 @@ void handle_mouse_whell(SDL_Event event)
     if (project_scroll == 0)
         project_scroll = 1;
 
-    if (project_scroll == 25)
-        project_scroll = 24;
+    if (project_scroll == PIXELORE_MAX_SCROLL)
+        project_scroll = PIXELORE_MAX_SCROLL - 1;
 }
 
 /* Function that return project_scroll variable */

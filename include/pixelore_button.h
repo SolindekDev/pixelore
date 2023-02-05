@@ -30,7 +30,7 @@ typedef void (*BTN_DRAW)(window_t* win, struct button_t btn);
 
 typedef struct button_t {
     i16 initialize, x, y, w, h, id;
-    bool is_draw, is_active;
+    bool is_draw, is_active, is_motion;
     str value;
     BTN_CALLBACK btn_callback;
     BTN_DRAW btn_draw;
@@ -46,13 +46,13 @@ void handle_mouse_motion_event(SDL_Event event);
 
 bool check_box_collision(i16 x1, i16 y1, i16 w1, i16 h1, i16 x2, i16 y2, i16 w2, i16 h2);
 
-void create_button(window_t* win, i16 x, i16 y, i16 w, i16 h, BTN_CALLBACK btn_callback);
+void create_button(window_t* win, i16 x, i16 y, i16 w, i16 h, BTN_CALLBACK btn_callback, bool is_motion);
 
 void resize_button(window_t* win, i32 id, i16 x, i16 y, i16 w, i16 h);
 
 void button_draw_handle(window_t* win, struct button_t btn);
 
-void create_button_with_text(window_t* win, i16 x, i16 y, i16 w, i16 h, str value, BTN_CALLBACK btn_callback);
+void create_button_with_text(window_t* win, i16 x, i16 y, i16 w, i16 h, str value, BTN_CALLBACK btn_callback, bool is_motion);
 
 void handle_mouse_event(SDL_Event event);
 

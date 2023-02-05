@@ -25,7 +25,14 @@
 /*  This file is for you! the users of pixelore if you really want an own theme
     of our app modifie the values below! */
 
-/* Colors values are in format R (red), G (green), B (blue) */
+/* ----- Don't change these values please start ----- */
+
+#define TOOLKIT_ALIGNEMT_LEFT 1
+#define TOOLKIT_ALIGNEMT_RIGHT 2
+
+#define TOOLKIT_NEWLINE_COLOR 7
+
+/* ----- Don't change these values zone end     -----*/
 
 /* Color of the app background */
 #define APP_BACKGROUND_COLOR() 39, 41, 43 
@@ -51,12 +58,6 @@
 /* Default font of app */
 #define APP_FONT_PATH() "./assets/fonts/MartianMono-Regular.ttf"
 
-/* Don't change these values please start */
-#define TOOLKIT_ALIGNEMT_LEFT 1
-#define TOOLKIT_ALIGNEMT_RIGHT 2
-
-/* Don't change these values zone end */
-
 /* Color of the app toolkit background */
 #define APP_TOOLKIT_BACKGROUND_COLOR() 32, 35, 38 
 
@@ -66,8 +67,7 @@
 /* Toolkit colors */
 #define TOOLKIT_COLORS_LENGTH 11
 
-#define TOOLKIT_NEWLINE_COLOR 7
-
+/* Defulat toolkit color palette */
 static color_t toolkit_colors[] = { 
     { 255, 255, 255, 255, "White"  },  /* 1.  White    */ 
     { 255, 000, 000, 255, "Red"    },  /* 2.  Red    */ 
@@ -82,12 +82,8 @@ static color_t toolkit_colors[] = {
     { 000, 000, 000, 255, "Black"  },  /* 11. Black */
 };
 
-static str tools[5] = {
-    [0] = "Pencil",
-    [1] = "Eraser",
-    [2] = "Line",
-    [3] = "Color picker",
-    [4] = "Bucket",
-};
+/* This value defines the max scroll, default and the most likely 
+ * value is 25 */
+#define PIXELORE_MAX_SCROLL 25
 
 #endif

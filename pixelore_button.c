@@ -31,11 +31,11 @@ __GLOBAL__ window_t* window;
 
 __GLOBAL__ bool mouse_click = false;
 
-void create_button(window_t* win, i16 x, i16 y, i16 w, i16 h, BTN_CALLBACK btn_callback)
+void create_button(window_t* win, i16 x, i16 y, i16 w, i16 h, BTN_CALLBACK btn_callback, bool is_motion)
 {
     window = win;
     i32 buttons_len_ = buttons_len;
-    button_t button = { 1, x, y, w, h, buttons_len_, false, false, NULL, btn_callback, NULL };
+    button_t button = { 1, x, y, w, h, buttons_len_, false, false, is_motion, NULL, btn_callback, NULL, };
     buttons[buttons_len] = button;
     buttons_len++;
 
@@ -53,11 +53,11 @@ void resize_button(window_t* win, i32 id, i16 x, i16 y, i16 w, i16 h)
     buttons[id].h = h;
 }
 
-void create_button_with_text(window_t* win, i16 x, i16 y, i16 w, i16 h, str value, BTN_CALLBACK btn_callback)
+void create_button_with_text(window_t* win, i16 x, i16 y, i16 w, i16 h, str value, BTN_CALLBACK btn_callback, bool is_motion)
 {
     window = win;
     i32 buttons_len_ = buttons_len;
-    button_t button = { 1, x, y, w, h, buttons_len_, true, false, value, btn_callback, button_draw_handle };
+    button_t button = { 1, x, y, w, h, buttons_len_, true, false, is_motion, value, btn_callback, button_draw_handle };
     buttons[buttons_len] = button;
     buttons_len++;
 
@@ -135,6 +135,9 @@ void handle_mouse_motion_event(SDL_Event event)
     for (i32 i = 0; i < buttons_len; i++)
     {
         button_t current_button = buttons[i];
+        
+        if (current_button.is_motion == false) break;
+
         if (check_box_collision(current_button.x, current_button.y, current_button.w, current_button.h, event.button.x, event.button.y, 2, 2))
         {
             if (current_button.btn_callback != NULL)

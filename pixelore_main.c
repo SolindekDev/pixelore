@@ -27,23 +27,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Main entry of pixelore */
 i32 main(i32 argc, str* argv)
 {
+    /* Create an window and check is everyhing gone well
+     * if not return with EXIT_FAILURE which identicate
+     * returning with error*/
     window_t* win = create_window(argc, argv, 1280, 720);    
 
     if (win == NULL) 
         return EXIT_FAILURE;
 
+    /* Set app background to APP_BACKGROUND_COLOR that can
+     * be changed in pixelore_config.h */
     window_set_background(win, APP_BACKGROUND_COLOR());
+    
+    /* Run the start application function */
     app_start(win);
+
+    /* Loop until win->close is true */
     while (!win->close)
     {
+        /* Inputs, clear buffer, app loop and swap the buffers */
         window_inputs(win);
         window_clear_buffer(win);         
-        // window_draw(win);
         app_loop(win);
         window_swap_buffers(win);
     }
     
+    /* Clean up everything and unallocate everything */
     window_clean_up();
-}   
+}

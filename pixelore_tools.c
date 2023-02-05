@@ -87,7 +87,7 @@ i32 tool_selection_callback(window_t* win, button_t btn, vec2_t _unused, bool __
     /* Quick little debug */
 #ifdef __DEBUG
     DEBUG_NN("Selected tool: ");
-    printf("%s\n", tools[btn.id - TOOLKIT_COLORS_LENGTH - 1]);
+    printf("%s\n", tools_list[btn.id - TOOLKIT_COLORS_LENGTH - 1].tool_name);
 #endif
 
     /* Set selecteed tool to button id - TOOLKIT_COLORS_LENGTH - 1
@@ -117,22 +117,6 @@ i32 bitmap_tool_callback(window_t* win, button_t btn, vec2_t mouse, bool button_
     tool_t* selected_tool = get_tool_by_id(get_selected_tool());
     selected_tool->tool_func(win, mouse, button_press, 
                              selected_tool);
-
-    /* Recognize which tool is actually selected
-     * and call the main function of it */
-//     switch (get_selected_tool())
-//     {
-//         case 0:  write_pixel_into_surface(mouse);       break;
-//         case 1:  eraser(mouse);                         break;
-//         case 2:  tool_line(win, mouse, button_press);   break;
-//         case 3:  color_picker(mouse);                   break;
-//         case 4:  bucket(mouse, custom_color);           break;   
-// #ifdef __DEBUG
-//         default: DEBUG("Unimplemented tool");           break;
-// #else  
-//         default:                                        break;
-// #endif
-//     }
 
     return 0;
 }

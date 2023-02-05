@@ -71,9 +71,36 @@ __GLOBAL__ vec2_t project_size = { 32, 32 };
 __GLOBAL__ vec2_t start_line = { -1, -1 };
 __GLOBAL__ vec2_t end_line = { -1, -1 };
 
-/* Function for saving project */
-i32 save_project_callback(window_t* win, button_t btn, vec2_t _unused, bool __unused)
+/* Function for validating project name */
+bool is_project_name_valid(str project_name)
 {
+    if (project_name[0] == '\0') return false;
+
+    ITER(strlen(project_name))
+        if (project_name[i] == ' ' || project_name[i] == '-') return false;
+
+    return true;
+}
+
+/* Function for saving project */
+i32 save_project_callback(window_t* win, button_t btn, vec2_t _unused, bool btn_click)
+{
+    /* Ignore if the button is realsed instead of pressed */
+    if (btn_click == false) return 0;
+
+    /* Check is the project name ok ok lol */
+    bool project_name_valid = is_project_name_valid(project_name);
+    if (project_name_valid == false)
+    {
+#ifdef __DEBUG
+        DEBUG_NN("Project name is not valid, make sure that it's not empty and don't have any spaces or '-' characters: ");
+        printf("%s\n", project_name);
+#endif
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Project name is invalid", 
+                                 "Project name is not valid, make sure that it's not empty and don't have any spaces or '-' characters", win->sdl_window);
+        return 0;
+    }
+
     /* Create image filename so it looks cool lol */
     str image_name_buf = malloc(512 * sizeof(char));
     snprintf(image_name_buf, 512, "./%s.png", project_name);
@@ -349,7 +376,7 @@ void setup_bitmap(window_t* win, i32 main_container_w, i32 main_container_h)
     front_bitmap = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
     back_bitmap  = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
     create_button(win, main_container_w / 2 - bitmap_w / 2, main_container_h / 2 - bitmap_h / 2,
-                  bitmap_w, bitmap_h, bitmap_tool_callback);
+                  bitmap_w, bitmap_h, bitmap_tool_callback, true);
 }
 
 /* Function for creating toolkit colors*/
@@ -361,21 +388,21 @@ void create_toolkit_colors(window_t* win, i32 toolkit_x, i32 toolkit_y)
         if (i >= TOOLKIT_NEWLINE_COLOR)
         {
             toolkit_y_newline = 40;
-            create_button(win, 10 + toolkit_x + ((i - TOOLKIT_NEWLINE_COLOR) * 40), toolkit_y + 40 + toolkit_y_newline, 40, 40, color_callback_button);
+            create_button(win, 10 + toolkit_x + ((i - TOOLKIT_NEWLINE_COLOR) * 40), toolkit_y + 40 + toolkit_y_newline, 40, 40, color_callback_button, false);
         }
         else
-            create_button(win, 10 + toolkit_x + (i * 40), toolkit_y + 40 + toolkit_y_newline,40, 40, color_callback_button);
+            create_button(win, 10 + toolkit_x + (i * 40), toolkit_y + 40 + toolkit_y_newline,40, 40, color_callback_button, false);
     }
 }
 
 /* Function for creating tool buttons*/
 void create_button_tools(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
 {
-    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 150, 90,  35, "Pencil",       tool_selection_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding + 100, toolkit_y + toolkit_padding + 150, 90,  35, "Eraser",       tool_selection_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding + 200, toolkit_y + toolkit_padding + 150, 70,  35, "Line",         tool_selection_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 195, 170, 35, "Color Picker", tool_selection_callback);
-    create_button_with_text(win, toolkit_x + toolkit_padding + 180, toolkit_y + toolkit_padding + 195, 100, 35, "Bucket",       tool_selection_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 150, 90,  35, "Pencil",       tool_selection_callback, false);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 100, toolkit_y + toolkit_padding + 150, 90,  35, "Eraser",       tool_selection_callback, false);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 200, toolkit_y + toolkit_padding + 150, 70,  35, "Line",         tool_selection_callback, false);
+    create_button_with_text(win, toolkit_x + toolkit_padding,       toolkit_y + toolkit_padding + 195, 170, 35, "Color Picker", tool_selection_callback, false);
+    create_button_with_text(win, toolkit_x + toolkit_padding + 180, toolkit_y + toolkit_padding + 195, 100, 35, "Bucket",       tool_selection_callback, false);
     create_tool(win, "Pencil",       tool_pencil);
     create_tool(win, "Eraser",       tool_eraser);
     create_tool(win, "Line",         tool_line);
@@ -400,7 +427,22 @@ void create_color_input_pickers(window_t* win, i32 toolkit_x, i32 toolkit_y, i32
 /* Function that will create some other essential buttons*/
 void create_other_buttons(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
 {
-    create_button_with_text(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35, (window_get_width(win) / 4) - toolkit_padding * 4, 35, "Save", save_project_callback);
+    create_button_with_text(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35, 
+                            (window_get_width(win) / 4) - toolkit_padding * 4, 35, "Save", save_project_callback, false);
+}
+
+/* Project name input callback function */
+void project_name_input_callback(window_t* win, input_t input)
+{
+    /* Just update project_name global variable */
+    project_name = input.value;
+}
+
+/* Function for creating project name input */
+void create_project_name_input(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
+{
+    create_input(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35 * 2 - 10, 
+                 (window_get_width(win) / 4) - toolkit_padding * 4, 35, false, 100, project_name, project_name_input_callback);
 }
 
 /* Function that is called on start */
@@ -426,6 +468,9 @@ void app_start(window_t* win)
 
     /* Create other buttons */
     create_other_buttons(win, toolkit_x, toolkit_y, toolkit_padding);
+
+    /* Create project name input */
+    create_project_name_input(win, toolkit_x, toolkit_y, toolkit_padding);
 }
 
 /* Draw toolkit background */
