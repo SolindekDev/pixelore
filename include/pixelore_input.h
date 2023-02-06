@@ -40,7 +40,7 @@ typedef struct input_t {
 
 #define MAX_INPUTS 128
 
-void create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, i32 max_len, str start_value, INPUT_CALLBACK input_callback);
+i32 create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, i32 max_len, str start_value, INPUT_CALLBACK input_callback);
 
 void input_draw_event(window_t* win);
 

@@ -96,7 +96,8 @@ void handle_backspace_input_event(SDL_Event event)
             if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
             {
                 inputs[i].value[strlen(inputs[i].value) - 1] = '\0';
-                inputs[i].input_callback(window, inputs[i]);
+                if (inputs[i].input_callback != NULL)
+                    inputs[i].input_callback(window, inputs[i]);
             }
 }
 
@@ -108,7 +109,8 @@ void handle_keyboard_input_event(SDL_Event event)
             if (strlen(inputs[i].value) == inputs[i].max_len)
                 return;
             inputs[i].value = append(inputs[i].value, event.text.text[0]);
-            inputs[i].input_callback(window, inputs[i]);
+            if (inputs[i].input_callback != NULL)
+                inputs[i].input_callback(window, inputs[i]);
         }
 }
 
@@ -119,7 +121,7 @@ void input_draw_event(window_t* win)
             inputs[i].input_draw(win, inputs[i]);
 }
 
-void create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, i32 max_len, str start_value, INPUT_CALLBACK input_callback)
+i32 create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, i32 max_len, str start_value, INPUT_CALLBACK input_callback)
 {
     window = win;
     i32 inputs_len_ = inputs_len;
@@ -134,4 +136,6 @@ void create_input(window_t* win, i16 x, i16 y, i16 w, i16 h, bool only_numbers, 
     DEBUG_NN("Successfully registered input with id [");
     printf("%d]\n", inputs[inputs_len - 1].id);
 #endif
+
+    return input.id;
 }

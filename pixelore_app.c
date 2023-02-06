@@ -68,6 +68,7 @@ __GLOBAL__ bool   project_saved = true;
 __GLOBAL__ str    project_name = "default_project";
 __GLOBAL__ vec2_t project_size = { 32, 32 };
 
+/* Line stuff */
 __GLOBAL__ vec2_t start_line = { -1, -1 };
 __GLOBAL__ vec2_t end_line = { -1, -1 };
 
@@ -344,6 +345,7 @@ void tool_line(window_t* _win, vec2_t mouse_pos, bool mouse_pressed, tool_t* _to
     }
 }
 
+/* Implementation of pencil */
 void tool_pencil(window_t* win, vec2_t mouse_pos, bool mouse_pressed, tool_t* tool_structure)
 {
     write_pixel_into_surface(mouse_pos);
@@ -364,17 +366,22 @@ void value_change_color_picker_input(window_t* win, input_t input)
 
 /* Function for easier setting up bitmap_w & bitmap_h
  * and the project_size */
-void set_default_bitmap_project_size(i32 w, i32 h)
+void set_bitmap_project_size(i32 w, i32 h)
 {
     bitmap_w = w;       bitmap_h = h;
     project_size.x = w; project_size.y = h;
 }
 
+void create_bitmaps(i32 _bitmap_w, i32 _bitmap_h)
+{
+    front_bitmap = SDL_CreateRGBSurface(0, _bitmap_w, _bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
+    back_bitmap  = SDL_CreateRGBSurface(0, _bitmap_w, _bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
+}
+
 /* Function for setuping bitmap */
 void setup_bitmap(window_t* win, i32 main_container_w, i32 main_container_h)
 {
-    front_bitmap = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
-    back_bitmap  = SDL_CreateRGBSurface(0, bitmap_w, bitmap_h, (i32)bitmap_depth, 0, 0, 0, 0);
+    create_bitmaps(bitmap_w, bitmap_h);
     create_button(win, main_container_w / 2 - bitmap_w / 2, main_container_h / 2 - bitmap_h / 2,
                   bitmap_w, bitmap_h, bitmap_tool_callback, true);
 }
@@ -445,11 +452,97 @@ void create_project_name_input(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 
                  (window_get_width(win) / 4) - toolkit_padding * 4, 35, false, 100, project_name, project_name_input_callback);
 }
 
+/* Function for clear button callback */
+i32 clear_button_callback(window_t* win, struct button_t btn, vec2_t vec, bool mouse_pressed)
+{
+    /* Clear front bitmap */
+
+    /* Create u8 pointer of front bitmap pixels and clear the buffer */
+    u8* front_pixels = (u8*)front_bitmap->pixels;
+    memset(front_pixels, 0, (project_size.y * front_bitmap->pitch) + (project_size.x * sizeof(u8) * 4));
+
+    /* Clear back bitmap */
+
+    /* Create u8 pointer of back bitmap pixels and calculate offset */
+    u8* back_pixels = (u8*)back_bitmap->pixels;
+    memset(front_pixels, 0, (project_size.y * back_bitmap->pitch) + (project_size.x * sizeof(u8) * 4));
+
+    return 0;
+}
+
+/* Function for checking is bitmap size correct */
+bool is_bitmap_size_correct(window_t* win, vec2_t bitmap_size)
+{
+    if (bitmap_size.x == 0 || bitmap_size.y == 0)
+    {
+#ifdef __DEBUG
+        DEBUG_NN("Not correct bitmap sizes");
+#endif
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bitmap sizes", 
+                                 "Not correct bitmap sizes\n", win->sdl_window);
+        return false;
+    }
+
+    if (bitmap_size.x > 512 || bitmap_size.y > 512)
+    {
+#ifdef __DEBUG
+        DEBUG_NN("Not correct bitmap sizes, bitmap sizes bigger than 512x512 are not allowed");
+#endif
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bitmap sizes", "Not correct bitmap sizes, bitmap sizes\
+bigger than 512x512 are not allowed\n", win->sdl_window);
+        return false;
+    }
+
+    return true;
+}
+
+/* Function for resizing bitmap */
+i32 resize_button_callback(window_t* win, struct button_t btn, vec2_t vec, bool mouse_pressed)
+{
+    if (mouse_pressed == false) return 0;
+
+    vec2_t new_bitmap_size = { SDL_atoi(get_input_by_id(4)->value), 
+                          SDL_atoi(get_input_by_id(5)->value) };
+
+    if (is_bitmap_size_correct(win, new_bitmap_size) == false) return 0;
+
+    set_bitmap_project_size(new_bitmap_size.x, new_bitmap_size.y);
+    create_bitmaps(new_bitmap_size.x, new_bitmap_size.y);
+
+    /* TODO: save before bitmap and give it to the new bitmap */
+
+    return 0;
+}
+
+/* Function for creating clear button and resize button */
+void create_clear_resize_button(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
+{
+    create_button_with_text(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35 * 3 - 20,
+                            (window_get_width(win) / 4) - toolkit_padding * 4, 35, "Clear", clear_button_callback, false);
+    create_button_with_text(win, toolkit_x + toolkit_padding + (2 * 80), window_get_height(win) - toolkit_padding - 35 * 4 - 30,
+                            120, 35, "Resize", resize_button_callback, false);
+}
+
+/* Function for creating width and height inputs */
+void create_width_height_input(window_t* win, i32 toolkit_x, i32 toolkit_y, i32 toolkit_padding)
+{
+    str buf = malloc(sizeof(i8) * 5);
+    SDL_itoa(project_size.x, buf, 10);
+    create_input(win, toolkit_x + toolkit_padding, window_get_height(win) - toolkit_padding - 35 * 4 - 30,
+                 70, 35, false, 4, buf, NULL);
+
+    SDL_itoa(project_size.y, buf, 10);
+    create_input(win, toolkit_x + toolkit_padding + 80, window_get_height(win) - toolkit_padding - 35 * 4 - 30,
+                 70, 35, false, 4, buf, NULL);
+
+    free(buf);
+}
+
 /* Function that is called on start */
 void app_start(window_t* win)
 {
     /* Setup some bitmap things and variables */
-    set_default_bitmap_project_size(32, 32);
+    set_bitmap_project_size(32, 32);
 
     SETUP_MAIN_CONTAINER_VARIABLES();
     setup_bitmap(win, main_container_w, main_container_h);
@@ -471,6 +564,11 @@ void app_start(window_t* win)
 
     /* Create project name input */
     create_project_name_input(win, toolkit_x, toolkit_y, toolkit_padding);
+
+    /* Create clear bitmap & resize button and also 
+     * width & height input */
+    create_clear_resize_button(win, toolkit_x, toolkit_y, toolkit_padding);
+    create_width_height_input(win, toolkit_x, toolkit_y, toolkit_padding);
 }
 
 /* Draw toolkit background */
